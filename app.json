@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Vital Optima",
+    "slug": "vital-optima",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "vitaloptima",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0D4F4A"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0D4F4A"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router", "expo-font"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
