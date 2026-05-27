@@ -6,10 +6,6 @@
     "orientation": "portrait",
     "scheme": "vitaloptima",
     "userInterfaceStyle": "light",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#0D4F4A"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.vitaloptima.app"
@@ -28,7 +24,7 @@
       "expo-router",
       "expo-font",
       "expo-sqlite",
-      "expo-splash-screen",
+      ["expo-splash-screen", { "backgroundColor": "#0D4F4A", "resizeMode": "contain" }],
       "expo-status-bar",
       [
         "expo-notifications",
