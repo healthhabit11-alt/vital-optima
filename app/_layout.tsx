@@ -8,22 +8,39 @@ import {
   Fraunces_700Bold,
   useFonts,
 } from '@expo-google-fonts/fraunces';
-import { Stack } from 'expo-router';
+import { Redirect, Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import * as Notifications from 'expo-notifications';
 
 import { ThemeProvider, useTheme } from '@/theme/ThemeContext';
+import { initDb } from '@/db/schema';
+import { useUserProfile } from '@/db/useUserProfile';
 
 SplashScreen.preventAutoHideAsync();
+initDb();
 
 function RootStack() {
   const { resolved } = useTheme();
+  const { profile } = useUserProfile();
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const medId = response.notification.request.content.data?.medicationId;
+      if (typeof medId === 'string') {
+        router.push(`/medication/${medId}`);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   return (
     <>
       <StatusBar style={resolved === 'dark' ? 'light' : 'dark'} />
+      {!profile.onboarded && <Redirect href={'/onboarding' as never} />}
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="medication/[id]"

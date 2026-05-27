@@ -1,25 +1,41 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MedicationCard } from '@/components/MedicationCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StickyActionBar } from '@/components/StickyActionBar';
-import { adherence, getMedicationDetail, todaysMedications } from '@/data/content';
+import { getMedicationDetail } from '@/data/content';
+import { useMedications } from '@/db/useMedications';
+import type { MedicationComponent } from '@/data/content';
 import { colors } from '@/theme/colors';
 import { useTheme } from '@/theme/ThemeContext';
 import { fonts } from '@/theme/typography';
 
+function defaultComponents(name: string): MedicationComponent[] {
+  return [
+    { id: 'dose', title: `${name} dose`, meta: 'As prescribed · log when taken', flagged: true, action: 'customize', icon: '💊' },
+    { id: 'food', title: 'Take with food', meta: 'Check timing with your care plan', action: 'swap', icon: '🥗' },
+    { id: 'interaction', title: 'Interaction check', meta: 'No conflicts logged today', action: 'customize', icon: '✓' },
+  ];
+}
+
 export default function MedicationDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [logged, setLogged] = useState(false);
 
   const { colors: themeColors } = useTheme();
-  const med = useMemo(() => (id ? getMedicationDetail(id) : undefined), [id]);
+  const { medications, logDose, todayDoseCount } = useMedications();
+
+  const liveMed = useMemo(() => medications.find((m) => m.id === id), [medications, id]);
+  const staticDetail = useMemo(() => (id ? getMedicationDetail(id) : undefined), [id]);
+
+  const med = liveMed ?? staticDetail;
+  const components = staticDetail?.components ?? (med ? defaultComponents(med.name) : []);
+  const logged = (liveMed?.status ?? staticDetail?.status) === 'taken';
 
   if (!med) {
     return (
@@ -29,8 +45,6 @@ export default function MedicationDetailScreen() {
       </View>
     );
   }
-
-  const dosesLogged = logged ? adherence.dosesTotal : adherence.dosesToday;
 
   return (
     <View style={[styles.root, { backgroundColor: themeColors.white }]}>
@@ -59,7 +73,7 @@ export default function MedicationDetailScreen() {
             label={logged ? 'LOGGED' : 'LOG TAKEN'}
             variant="teal"
             style={logged ? { ...styles.logBtn, ...styles.logBtnDone } : styles.logBtn}
-            onPress={() => setLogged(true)}
+            onPress={() => { if (id && !logged) logDose(id); }}
           />
         </View>
 
@@ -67,10 +81,10 @@ export default function MedicationDetailScreen() {
           <Text style={[styles.title, { color: themeColors.ink }]}>{med.name}</Text>
           <Text style={[styles.meta, { color: themeColors.inkMuted }]}>{med.schedule}</Text>
           <Text style={styles.flag}>
-            {med.status === 'taken' ? 'LOGGED TODAY' : 'SCHEDULED DOSE'}
+            {logged ? 'LOGGED TODAY' : 'SCHEDULED DOSE'}
           </Text>
 
-          {med.components.map((c) => (
+          {components.map((c) => (
             <View key={c.id} style={[styles.row, { borderTopColor: themeColors.border }]}>
               <View style={[styles.thumb, { backgroundColor: themeColors.cream }]}>
                 <Text style={styles.thumbIcon}>{c.icon}</Text>
@@ -94,7 +108,7 @@ export default function MedicationDetailScreen() {
 
           <Text style={[styles.relatedTitle, { color: themeColors.ink }]}>Also today</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {todaysMedications
+            {medications
               .filter((m) => m.id !== med.id)
               .map((m) => (
                 <MedicationCard key={m.id} medication={m} compact />
@@ -104,8 +118,8 @@ export default function MedicationDetailScreen() {
       </ScrollView>
 
       <StickyActionBar
-        label={`TODAY'S DOSES (${dosesLogged}/${adherence.dosesTotal})`}
-        onPress={() => setLogged(true)}
+        label={`TODAY'S DOSES (${todayDoseCount}/${medications.length})`}
+        onPress={() => { if (id && !logged) logDose(id); }}
       />
     </View>
   );

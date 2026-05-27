@@ -10,7 +10,9 @@ import { SegmentToggle } from '@/components/SegmentToggle';
 import { TealHeader } from '@/components/TealHeader';
 import { TrackerCategoryRow } from '@/components/TrackerCategoryRow';
 import { radius, shadow } from '@/theme/tokens';
-import { medicationCategories, todaysMedications, user } from '@/data/content';
+import { medicationCategories } from '@/data/content';
+import { useMedications } from '@/db/useMedications';
+import { useUserProfile } from '@/db/useUserProfile';
 import { useTheme } from '@/theme/ThemeContext';
 import { fonts } from '@/theme/typography';
 
@@ -20,13 +22,16 @@ export default function MedsScreen() {
   const [mode, setMode] = useState<'left' | 'right'>('left');
   const [query, setQuery] = useState('');
 
+  const { medications } = useMedications();
+  const { profile } = useUserProfile();
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return todaysMedications;
-    return todaysMedications.filter(
+    if (!q) return medications;
+    return medications.filter(
       (m) => m.name.toLowerCase().includes(q) || m.schedule.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, medications]);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.white }]}>
@@ -35,7 +40,7 @@ export default function MedsScreen() {
           <SegmentToggle left="SCHEDULE" right="LOG" active={mode} onChange={setMode} dark />
           <View style={styles.region}>
             <Text style={styles.regionLabel}>REGION</Text>
-            <Text style={styles.regionValue}>{user.region} · local data</Text>
+            <Text style={styles.regionValue}>{profile.region} · local data</Text>
           </View>
         </View>
         <View style={styles.search}>

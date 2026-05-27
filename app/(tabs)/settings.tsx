@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { adherence, user } from '@/data/content';
 import { useTheme } from '@/theme/ThemeContext';
+import { useMedications } from '@/db/useMedications';
+import { useUserProfile } from '@/db/useUserProfile';
 import { useThemedStyles } from '@/theme/useThemedStyles';
 import { fonts } from '@/theme/typography';
 
@@ -24,6 +25,8 @@ const settingsItems: SettingsItem[] = [
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { resolved, setMode } = useTheme();
+  const { profile } = useUserProfile();
+  const { medications, todayDoseCount } = useMedications();
   const isDark = resolved === 'dark';
   const styles = useThemedStyles((c) =>
     StyleSheet.create({
@@ -83,25 +86,25 @@ export default function SettingsScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{user.displayName[0]}</Text>
+        <Text style={styles.avatarText}>{profile.displayName[0]}</Text>
       </View>
-      <Text style={styles.name}>{user.displayName}</Text>
+      <Text style={styles.name}>{profile.displayName}</Text>
       <Text style={styles.sub}>Local profile · offline-first</Text>
 
       <View style={styles.stats}>
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{adherence.streakDays}d</Text>
-          <Text style={styles.statLabel}>Streak</Text>
+          <Text style={styles.statValue}>{profile.region}</Text>
+          <Text style={styles.statLabel}>Region</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statValue}>
-            {adherence.dosesToday}/{adherence.dosesTotal}
+            {todayDoseCount}/{medications.length}
           </Text>
           <Text style={styles.statLabel}>Today</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statValue}>PIN</Text>
-          <Text style={styles.statLabel}>Secured</Text>
+          <Text style={styles.statValue}>{profile.pinHash ? 'PIN' : 'None'}</Text>
+          <Text style={styles.statLabel}>{profile.pinHash ? 'Secured' : 'No PIN'}</Text>
         </View>
       </View>
 

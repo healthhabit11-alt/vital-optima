@@ -13,13 +13,11 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { QuickLogBar } from '@/components/QuickLogBar';
 import { SectionLabel } from '@/components/SectionLabel';
 import { SegmentToggle } from '@/components/SegmentToggle';
-import {
-  adherence,
-  dashboardInsight,
-  latestGlucose,
-  todaysMedications,
-  user,
-} from '@/data/content';
+import { useMedications } from '@/db/useMedications';
+import { useGlucose } from '@/db/useGlucose';
+import { useUserProfile } from '@/db/useUserProfile';
+import { HypoModal } from '@/components/HypoModal';
+import { dashboardInsight } from '@/data/content';
 import { colors } from '@/theme/colors';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, shadow } from '@/theme/tokens';
@@ -30,6 +28,13 @@ export default function DashboardScreen() {
   const { colors: themeColors } = useTheme();
   const [mode, setMode] = useState<'left' | 'right'>('left');
 
+  const { profile } = useUserProfile();
+  const { medications, todayDoseCount } = useMedications();
+  const { latest, hypoAlert, dismissHypo } = useGlucose();
+
+  const dosesTotal = medications.length;
+  const streakLabel = `${todayDoseCount}/${dosesTotal} today`;
+
   return (
     <View style={[styles.root, { paddingTop: insets.top, backgroundColor: themeColors.cream }]}>
       <LinearGradient colors={[colors.teal, colors.tealLight, '#2A7A72']} style={styles.header}>
@@ -38,7 +43,7 @@ export default function DashboardScreen() {
           <SegmentToggle left="TODAY" right="WEEK" active={mode} onChange={setMode} dark />
           <View style={styles.focus}>
             <Text style={styles.focusLabel}>ADHERENCE</Text>
-            <Text style={styles.focusValue}>{adherence.streakDays} day streak</Text>
+            <Text style={styles.focusValue}>{streakLabel}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -50,19 +55,16 @@ export default function DashboardScreen() {
       >
         <FadeIn delay={0}>
           <View style={styles.greeting}>
-            <Text style={[styles.hey, { color: themeColors.ink }]}>Hey, {user.displayName.toLowerCase()}</Text>
+            <Text style={[styles.hey, { color: themeColors.ink }]}>
+              Hey, {profile.displayName.toLowerCase()}
+            </Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Reminders, ${user.reminderCount} unread`}
+              accessibilityLabel="Reminders"
               style={styles.reminders}
             >
               <Ionicons name="notifications-outline" size={18} color={colors.teal} />
               <Text style={styles.remindersLabel}>REMINDERS</Text>
-              {user.reminderCount > 0 ? (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{user.reminderCount}</Text>
-                </View>
-              ) : null}
             </Pressable>
           </View>
         </FadeIn>
@@ -90,9 +92,11 @@ export default function DashboardScreen() {
           </LinearGradient>
         </FadeIn>
 
-        <FadeIn delay={120}>
-          <GlucoseSummaryCard reading={latestGlucose} onLogPress={() => router.push('/(tabs)/glucose')} />
-        </FadeIn>
+        {latest ? (
+          <FadeIn delay={120}>
+            <GlucoseSummaryCard reading={latest} onLogPress={() => router.push('/(tabs)/glucose')} />
+          </FadeIn>
+        ) : null}
 
         <FadeIn delay={160}>
           <QuickLogBar />
@@ -100,22 +104,27 @@ export default function DashboardScreen() {
 
         <FadeIn delay={200}>
           <SectionLabel>
-            TODAY&apos;S MEDICATIONS ({adherence.dosesToday}/{adherence.dosesTotal})
+            TODAY&apos;S MEDICATIONS ({todayDoseCount}/{dosesTotal})
           </SectionLabel>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
-            {todaysMedications.map((m) => (
+            {medications.map((m) => (
               <MedicationCard key={m.id} medication={m} />
             ))}
           </ScrollView>
         </FadeIn>
-
       </ScrollView>
 
       <StickyActionBar
         label="LOG NEXT DOSE"
         icon="💊"
-        onPress={() => router.push('/medication/evening-arv')}
+        onPress={() => {
+          const next = medications.find((m) => m.status !== 'taken');
+          if (next) router.push(`/medication/${next.id}`);
+          else router.push('/(tabs)/meds');
+        }}
       />
+
+      <HypoModal value={hypoAlert} onDismiss={dismissHypo} />
     </View>
   );
 }
@@ -153,16 +162,6 @@ const styles = StyleSheet.create({
   hey: { fontFamily: fonts.display, fontSize: 36, letterSpacing: -0.8 },
   reminders: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, minHeight: 44 },
   remindersLabel: { fontFamily: fonts.bodyBold, fontSize: 11, letterSpacing: 1, color: colors.teal },
-  badge: {
-    backgroundColor: colors.terracotta,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.white },
   hero: {
     borderRadius: radius.lg,
     padding: 22,

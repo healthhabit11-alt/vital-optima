@@ -15,23 +15,32 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GlucoseSummaryCard } from '@/components/GlucoseSummaryCard';
+import { HypoModal } from '@/components/HypoModal';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { glucoseQuickActions, latestGlucose, user, weekGlucoseTrend } from '@/data/content';
+import { useGlucose } from '@/db/useGlucose';
+import { useUserProfile } from '@/db/useUserProfile';
+import { glucoseQuickActions } from '@/data/content';
 import { useTheme } from '@/theme/ThemeContext';
 import { fonts } from '@/theme/typography';
-
-const recentLogs = [
-  { value: '5.2', time: 'Today, 8:14 AM' },
-  { value: '4.9', time: 'Yesterday, 9:02 PM' },
-  { value: '5.4', time: 'Yesterday, 8:10 AM' },
-];
 
 export default function GlucoseScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const [tab, setTab] = useState<'trend' | 'log'>('trend');
   const [draftValue, setDraftValue] = useState('');
-  const max = Math.max(...weekGlucoseTrend);
+
+  const { profile } = useUserProfile();
+  const { readings, latest, weekTrend, logReading, hypoAlert, dismissHypo } = useGlucose();
+
+  const max = Math.max(...weekTrend, 1);
+
+  const handleSave = () => {
+    const val = parseFloat(draftValue.replace(',', '.'));
+    if (!isNaN(val) && val > 0) {
+      logReading(val);
+      setDraftValue('');
+    }
+  };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top, backgroundColor: colors.white }]}>
@@ -51,18 +60,28 @@ export default function GlucoseScreen() {
       </View>
 
       <Pressable style={styles.locationRow}>
-        <Text style={[styles.location, { color: colors.ink }]}>{user.region} · mmol/L</Text>
+        <Text style={[styles.location, { color: colors.ink }]}>{profile.region} · {profile.unit}</Text>
         <Ionicons name="chevron-down" size={18} color={colors.ink} />
       </Pressable>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {tab === 'trend' ? (
           <>
-            <GlucoseSummaryCard reading={latestGlucose} onLogPress={() => setTab('log')} />
+            {latest ? (
+              <GlucoseSummaryCard reading={latest} onLogPress={() => setTab('log')} />
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                style={[styles.emptyCard, { backgroundColor: colors.cream, borderColor: colors.border }]}
+                onPress={() => setTab('log')}
+              >
+                <Text style={[styles.emptyText, { color: colors.inkDim }]}>No readings yet — tap to log one</Text>
+              </Pressable>
+            )}
 
             <SectionLabel>7-DAY TREND</SectionLabel>
             <View style={[styles.chart, { backgroundColor: colors.cream, borderColor: colors.border }]} accessibilityLabel="Seven day glucose trend chart">
-              {weekGlucoseTrend.map((v, i) => {
+              {weekTrend.map((v, i) => {
                 const h = Math.max(12, (v / max) * 96);
                 const inRange = v >= 4.0 && v <= 7.0;
                 return (
@@ -98,7 +117,7 @@ export default function GlucoseScreen() {
           <>
             <Text style={[styles.logHeading, { color: colors.ink }]}>Log a reading</Text>
             <Text style={[styles.logHint, { color: colors.inkMuted }]}>
-              Stored on-device only in this prototype. Not shared automatically.
+              Stored on-device only. Not shared automatically.
             </Text>
             <View style={[styles.logField, { borderColor: colors.border, backgroundColor: colors.cream }]}>
               <TextInput
@@ -110,17 +129,23 @@ export default function GlucoseScreen() {
                 onChangeText={setDraftValue}
                 style={[styles.logInput, { color: colors.ink }]}
               />
-              <Text style={[styles.logUnit, { color: colors.inkMuted }]}>mmol/L</Text>
+              <Text style={[styles.logUnit, { color: colors.inkMuted }]}>{profile.unit}</Text>
             </View>
-            <PrimaryButton label="SAVE READING" style={styles.saveBtn} onPress={() => setDraftValue('')} />
+            <PrimaryButton label="SAVE READING" style={styles.saveBtn} onPress={handleSave} />
 
-            <Text style={[styles.recentTitle, { color: colors.ink }]}>Recent</Text>
-            {recentLogs.map((log) => (
-              <View key={log.time} style={[styles.recentRow, { borderBottomColor: colors.border }]}>
-                <Text style={[styles.recentValue, { color: colors.ink }]}>{log.value} mmol/L</Text>
-                <Text style={[styles.recentTime, { color: colors.inkDim }]}>{log.time}</Text>
-              </View>
-            ))}
+            {readings.length > 0 ? (
+              <>
+                <Text style={[styles.recentTitle, { color: colors.ink }]}>Recent</Text>
+                {readings.slice(0, 10).map((log) => (
+                  <View key={log.id} style={[styles.recentRow, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.recentValue, { color: colors.ink }]}>
+                      {log.value.toFixed(1)} {profile.unit}
+                    </Text>
+                    <Text style={[styles.recentTime, { color: colors.inkDim }]}>{log.loggedAt}</Text>
+                  </View>
+                ))}
+              </>
+            ) : null}
           </>
         )}
 
@@ -128,7 +153,7 @@ export default function GlucoseScreen() {
           <Text style={styles.promoBrand}>VitalOptima</Text>
           <Text style={styles.promoTitle}>Reading below 3.9 mmol/L?</Text>
           <Text style={styles.promoSub}>
-            The hypo protocol modal appears within 500ms. Always follow your care plan.
+            The hypo protocol shows within the app. Always follow your care plan.
           </Text>
           <Text style={styles.promoNote}>Emergency (AU): 000</Text>
         </LinearGradient>
@@ -141,6 +166,8 @@ export default function GlucoseScreen() {
           <Text style={styles.reportLinkText}>Prepare visit summary →</Text>
         </Pressable>
       </ScrollView>
+
+      <HypoModal value={hypoAlert} onDismiss={dismissHypo} />
     </View>
   );
 }
@@ -155,6 +182,14 @@ const styles = StyleSheet.create({
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 16 },
   location: { fontFamily: fonts.bodyBold, fontSize: 16 },
   scroll: { paddingBottom: 32 },
+  emptyCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emptyText: { fontFamily: fonts.body, fontSize: 14 },
   chart: {
     flexDirection: 'row',
     alignItems: 'flex-end',

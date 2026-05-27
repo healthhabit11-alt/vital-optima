@@ -11,18 +11,34 @@
       "backgroundColor": "#0D4F4A"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vitaloptima.app"
     },
     "android": {
+      "package": "com.vitaloptima.app",
       "adaptiveIcon": {
         "backgroundColor": "#0D4F4A"
       }
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "single"
     },
-    "plugins": ["expo-router", "expo-font"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-sqlite",
+      "expo-splash-screen",
+      "expo-status-bar",
+      [
+        "expo-notifications",
+        {
+          "color": "#0D4F4A",
+          "defaultChannel": "default",
+          "androidMode": "default"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     }
