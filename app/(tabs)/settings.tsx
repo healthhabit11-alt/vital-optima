@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/theme/ThemeContext';
@@ -25,7 +26,7 @@ const settingsItems: SettingsItem[] = [
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { resolved, setMode } = useTheme();
-  const { profile } = useUserProfile();
+  const { profile, deleteAllData } = useUserProfile();
   const { medications, todayDoseCount } = useMedications();
   const isDark = resolved === 'dark';
   const styles = useThemedStyles((c) =>
@@ -79,6 +80,45 @@ export default function SettingsScreen() {
     }),
   );
 
+  const handleItem = (id: string) => {
+    switch (id) {
+      case 'notifications':
+        Alert.alert(
+          'Notification preferences',
+          'Dose reminders are set automatically when you complete onboarding. Per-medication scheduling is coming in v1.1.',
+          [{ text: 'OK' }],
+        );
+        break;
+      case 'export':
+        router.push('/report');
+        break;
+      case 'delete':
+        Alert.alert(
+          'Delete all data',
+          'This will permanently delete all medications, glucose readings, and dose logs. Your profile will reset. This cannot be undone.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Delete everything',
+              style: 'destructive',
+              onPress: () => {
+                deleteAllData();
+                router.replace('/onboarding');
+              },
+            },
+          ],
+        );
+        break;
+      case 'privacy':
+        Alert.alert(
+          'Privacy policy',
+          'All data is stored locally on your device using SQLite. Nothing is sent to any server without your explicit action (e.g. tapping "Share" in the report screen). No account is required.',
+          [{ text: 'Got it' }],
+        );
+        break;
+    }
+  };
+
   return (
     <ScrollView
       style={[styles.root, { paddingTop: insets.top + 20 }]}
@@ -127,6 +167,7 @@ export default function SettingsScreen() {
             accessibilityRole="button"
             accessibilityLabel={item.label}
             style={styles.menuRow}
+            onPress={() => handleItem(item.id)}
           >
             <View style={styles.menuLeft}>
               <Ionicons

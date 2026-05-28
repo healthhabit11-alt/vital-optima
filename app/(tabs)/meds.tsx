@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FadeIn } from '@/components/FadeIn';
@@ -22,7 +23,7 @@ export default function MedsScreen() {
   const [mode, setMode] = useState<'left' | 'right'>('left');
   const [query, setQuery] = useState('');
 
-  const { medications } = useMedications();
+  const { medications, logDose, doseHistory } = useMedications();
   const { profile } = useUserProfile();
 
   const filtered = useMemo(() => {
@@ -32,6 +33,13 @@ export default function MedsScreen() {
       (m) => m.name.toLowerCase().includes(q) || m.schedule.toLowerCase().includes(q),
     );
   }, [query, medications]);
+
+  const categoryRoutes: Record<string, () => void> = {
+    daily: () => setMode('left'),
+    interactions: () => router.push('/(tabs)/meds'),
+    history: () => router.push('/report'),
+    reminders: () => router.push('/(tabs)/settings'),
+  };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.white }]}>
@@ -56,48 +64,84 @@ export default function MedsScreen() {
         </View>
       </TealHeader>
 
-      <ScrollView
-        style={styles.body}
-        contentContainerStyle={[styles.bodyContent, { paddingBottom: insets.bottom + 24 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        <FadeIn delay={0}>
-          <View style={styles.quickRow}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Today's doses"
-              style={[styles.quickBtn, shadow.card, { backgroundColor: colors.cream, borderColor: colors.border }]}
-            >
-              <Ionicons name="today" size={20} color={colors.teal} />
-              <Text style={[styles.quickLabel, { color: colors.teal }]}>Today</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Saved medications"
-              style={[styles.quickBtn, shadow.card, { backgroundColor: colors.cream, borderColor: colors.border }]}
-            >
-              <Ionicons name="bookmark" size={20} color={colors.teal} />
-              <Text style={[styles.quickLabel, { color: colors.teal }]}>Saved</Text>
-            </Pressable>
-          </View>
-        </FadeIn>
+      {mode === 'left' ? (
+        <ScrollView
+          style={styles.body}
+          contentContainerStyle={[styles.bodyContent, { paddingBottom: insets.bottom + 24 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <FadeIn delay={0}>
+            <View style={styles.quickRow}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Today's doses"
+                style={[styles.quickBtn, shadow.card, { backgroundColor: colors.cream, borderColor: colors.border }]}
+                onPress={() => setQuery('')}
+              >
+                <Ionicons name="today" size={20} color={colors.teal} />
+                <Text style={[styles.quickLabel, { color: colors.teal }]}>Today</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Saved medications"
+                style={[styles.quickBtn, shadow.card, { backgroundColor: colors.cream, borderColor: colors.border }]}
+                onPress={() => Alert.alert('Bookmarks', 'Save your favourite medications — coming in v1.1.')}
+              >
+                <Ionicons name="bookmark" size={20} color={colors.teal} />
+                <Text style={[styles.quickLabel, { color: colors.teal }]}>Saved</Text>
+              </Pressable>
+            </View>
+          </FadeIn>
 
-        <FadeIn delay={80}>
-          <SectionLabel>DUE TODAY ({filtered.length})</SectionLabel>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carousel}>
-            {filtered.map((m) => (
-              <MedicationCard key={m.id} medication={m} compact />
+          <FadeIn delay={80}>
+            <SectionLabel>DUE TODAY ({filtered.length})</SectionLabel>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carousel}>
+              {filtered.map((m) => (
+                <MedicationCard key={m.id} medication={m} compact onLogPress={() => logDose(m.id)} />
+              ))}
+            </ScrollView>
+          </FadeIn>
+
+          <FadeIn delay={140}>
+            <SectionLabel>BROWSE</SectionLabel>
+            {medicationCategories.map((c) => (
+              <TrackerCategoryRow
+                key={c.id}
+                category={c}
+                onPress={categoryRoutes[c.id]}
+              />
             ))}
-          </ScrollView>
-        </FadeIn>
-
-        <FadeIn delay={140}>
-          <SectionLabel>BROWSE</SectionLabel>
-          {medicationCategories.map((c) => (
-            <TrackerCategoryRow key={c.id} category={c} />
-          ))}
-        </FadeIn>
-      </ScrollView>
+          </FadeIn>
+        </ScrollView>
+      ) : (
+        <ScrollView
+          style={styles.body}
+          contentContainerStyle={[styles.bodyContent, { paddingBottom: insets.bottom + 24 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <FadeIn delay={0}>
+            <SectionLabel>DOSE HISTORY</SectionLabel>
+            {doseHistory.length === 0 ? (
+              <View style={[styles.emptyLog, { backgroundColor: colors.cream, borderColor: colors.border }]}>
+                <Text style={[styles.emptyLogText, { color: colors.inkDim }]}>No doses logged yet. Tap + on any medication card to log.</Text>
+              </View>
+            ) : (
+              doseHistory.map((log) => (
+                <View key={log.id} style={[styles.logRow, { borderBottomColor: colors.border }]}>
+                  <View style={[styles.logDot, { backgroundColor: colors.teal }]} />
+                  <View style={styles.logText}>
+                    <Text style={[styles.logName, { color: colors.ink }]}>{log.medicationName}</Text>
+                    <Text style={[styles.logTime, { color: colors.inkDim }]}>{log.loggedAt}</Text>
+                  </View>
+                  <View style={[styles.logBadge, { backgroundColor: colors.tealMuted }]}>
+                    <Text style={[styles.logBadgeText, { color: colors.teal }]}>Logged</Text>
+                  </View>
+                </View>
+              ))
+            )}
+          </FadeIn>
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -152,4 +196,24 @@ const styles = StyleSheet.create({
   },
   quickLabel: { fontFamily: fonts.bodyBold, fontSize: 14 },
   carousel: { marginBottom: 8, marginHorizontal: -20, paddingHorizontal: 20 },
+  emptyLog: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyLogText: { fontFamily: fonts.body, fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  logRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 12,
+  },
+  logDot: { width: 10, height: 10, borderRadius: 5 },
+  logText: { flex: 1 },
+  logName: { fontFamily: fonts.bodyBold, fontSize: 15, marginBottom: 2 },
+  logTime: { fontFamily: fonts.body, fontSize: 13 },
+  logBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  logBadgeText: { fontFamily: fonts.bodyBold, fontSize: 11 },
 });

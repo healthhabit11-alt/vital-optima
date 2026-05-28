@@ -12,6 +12,7 @@ import { fonts } from '@/theme/typography';
 type MedicationCardProps = {
   medication: Medication;
   compact?: boolean;
+  onLogPress?: () => void;
 };
 
 const CARD_W = 148;
@@ -23,7 +24,7 @@ const statusConfig: Record<MedicationStatus, { label: string; bg: string; text: 
   missed: { label: 'Missed', bg: '#FDE8E4', text: colors.badge },
 };
 
-export function MedicationCard({ medication, compact }: MedicationCardProps) {
+export function MedicationCard({ medication, compact, onLogPress }: MedicationCardProps) {
   const { colors: themeColors } = useTheme();
   const status = statusConfig[medication.status];
 
@@ -51,10 +52,10 @@ export function MedicationCard({ medication, compact }: MedicationCardProps) {
           accessibilityRole="button"
           accessibilityLabel={`Log ${medication.name} as taken`}
           hitSlop={8}
-          style={[styles.logBtn, shadow.float]}
-          onPress={(e) => e.stopPropagation()}
+          style={[styles.logBtn, shadow.float, medication.status === 'taken' && styles.logBtnDone]}
+          onPress={(e) => { e.stopPropagation(); if (medication.status !== 'taken') onLogPress?.(); }}
         >
-          <Ionicons name="add" size={22} color={colors.teal} />
+          <Ionicons name={medication.status === 'taken' ? 'checkmark' : 'add'} size={22} color={colors.teal} />
         </Pressable>
         {medication.tag ? (
           <View style={styles.limitedTag}>
@@ -115,6 +116,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  logBtnDone: {
+    backgroundColor: colors.tealMuted,
+    opacity: 0.7,
   },
   limitedTag: {
     position: 'absolute',

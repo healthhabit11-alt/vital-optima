@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { db } from './schema';
 import type { Medication, MedicationStatus } from '../data/content';
+import { formatLoggedAt } from './useGlucose';
 
 type DbMedication = {
   id: string;
@@ -27,8 +28,29 @@ function toMedication(row: DbMedication): Medication {
   };
 }
 
+export type DoseLog = {
+  id: number;
+  medicationName: string;
+  loggedAt: string;
+};
+
 export function useMedications() {
   const [medications, setMedications] = useState<Medication[]>([]);
+  const [doseHistory, setDoseHistory] = useState<DoseLog[]>([]);
+
+  const loadHistory = useCallback(() => {
+    const rows = db.getAllSync<{ id: number; name: string; logged_at: string }>(
+      `SELECT dl.id, m.name, dl.logged_at
+       FROM dose_logs dl
+       JOIN medications m ON dl.medication_id = m.id
+       ORDER BY dl.logged_at DESC LIMIT 30`,
+    );
+    setDoseHistory(rows.map((r) => ({
+      id: r.id,
+      medicationName: r.name,
+      loggedAt: formatLoggedAt(r.logged_at),
+    })));
+  }, []);
 
   const load = useCallback(() => {
     const rows = db.getAllSync<DbMedication>(
@@ -39,7 +61,8 @@ export function useMedications() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    loadHistory();
+  }, [load, loadHistory]);
 
   const logDose = useCallback(
     (medicationId: string) => {
@@ -52,8 +75,9 @@ export function useMedications() {
         medicationId,
       );
       load();
+      loadHistory();
     },
-    [load],
+    [load, loadHistory],
   );
 
   const addMedication = useCallback(
@@ -77,5 +101,5 @@ export function useMedications() {
 
   const todayDoseCount = medications.filter((m) => m.status === 'taken').length;
 
-  return { medications, logDose, addMedication, reload: load, todayDoseCount };
+  return { medications, logDose, addMedication, reload: load, todayDoseCount, doseHistory };
 }

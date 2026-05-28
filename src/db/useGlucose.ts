@@ -10,12 +10,22 @@ type DbReading = {
   note?: string;
 };
 
+export function formatLoggedAt(raw: string): string {
+  const d = new Date(raw.replace(' ', 'T'));
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (isToday) return `Today, ${timeStr}`;
+  const dayStr = d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+  return `${dayStr}, ${timeStr}`;
+}
+
 function toReading(row: DbReading): GlucoseReading & { id: number } {
   return {
     id: row.id,
     value: row.value,
     unit: 'mmol/L',
-    loggedAt: row.logged_at,
+    loggedAt: formatLoggedAt(row.logged_at),
     inRange: row.value >= 4.0 && row.value <= 7.0,
   };
 }

@@ -79,5 +79,16 @@ export function useUserProfile() {
     [load],
   );
 
-  return { profile, updateProfile, completeOnboarding, setPinHash };
+  const deleteAllData = useCallback(() => {
+    db.execSync(`DELETE FROM dose_logs`);
+    db.execSync(`DELETE FROM glucose_readings`);
+    db.execSync(`DELETE FROM medications`);
+    db.runSync(
+      `UPDATE user_profile SET display_name = ?, region = ?, unit = ?, pin_hash = NULL, onboarded = 0 WHERE id = 1`,
+      'You', 'AU', 'mmol/L',
+    );
+    load();
+  }, [load]);
+
+  return { profile, updateProfile, completeOnboarding, setPinHash, deleteAllData };
 }

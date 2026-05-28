@@ -59,7 +59,12 @@ export default function GlucoseScreen() {
         </Pressable>
       </View>
 
-      <Pressable style={styles.locationRow}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Change region or unit"
+        style={styles.locationRow}
+        onPress={() => router.push('/(tabs)/settings')}
+      >
         <Text style={[styles.location, { color: colors.ink }]}>{profile.region} · {profile.unit}</Text>
         <Ionicons name="chevron-down" size={18} color={colors.ink} />
       </Pressable>
@@ -105,6 +110,9 @@ export default function GlucoseScreen() {
                   style={styles.chip}
                   onPress={() => {
                     if (c.id === 'log') setTab('log');
+                    else if (c.id === 'trend') setTab('trend');
+                    else if (c.id === 'hypo') setHypoAlert(3.5);
+                    else if (c.id === 'export') router.push('/report');
                   }}
                 >
                   <Text style={styles.chipIcon}>{c.icon}</Text>

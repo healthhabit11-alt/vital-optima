@@ -29,11 +29,12 @@ export default function DashboardScreen() {
   const [mode, setMode] = useState<'left' | 'right'>('left');
 
   const { profile } = useUserProfile();
-  const { medications, todayDoseCount } = useMedications();
-  const { latest, hypoAlert, dismissHypo } = useGlucose();
+  const { medications, todayDoseCount, logDose } = useMedications();
+  const { latest, weekTrend, hypoAlert, dismissHypo } = useGlucose();
 
   const dosesTotal = medications.length;
   const streakLabel = `${todayDoseCount}/${dosesTotal} today`;
+  const avgGlucose = (weekTrend.reduce((a, b) => a + b, 0) / weekTrend.length).toFixed(1);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top, backgroundColor: themeColors.cream }]}>
@@ -62,6 +63,7 @@ export default function DashboardScreen() {
               accessibilityRole="button"
               accessibilityLabel="Reminders"
               style={styles.reminders}
+              onPress={() => router.push('/(tabs)/settings')}
             >
               <Ionicons name="notifications-outline" size={18} color={colors.teal} />
               <Text style={styles.remindersLabel}>REMINDERS</Text>
@@ -102,16 +104,46 @@ export default function DashboardScreen() {
           <QuickLogBar />
         </FadeIn>
 
-        <FadeIn delay={200}>
-          <SectionLabel>
-            TODAY&apos;S MEDICATIONS ({todayDoseCount}/{dosesTotal})
-          </SectionLabel>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
-            {medications.map((m) => (
-              <MedicationCard key={m.id} medication={m} />
-            ))}
-          </ScrollView>
-        </FadeIn>
+        {mode === 'left' ? (
+          <FadeIn delay={200}>
+            <SectionLabel>
+              TODAY&apos;S MEDICATIONS ({todayDoseCount}/{dosesTotal})
+            </SectionLabel>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
+              {medications.map((m) => (
+                <MedicationCard key={m.id} medication={m} onLogPress={() => logDose(m.id)} />
+              ))}
+            </ScrollView>
+          </FadeIn>
+        ) : (
+          <FadeIn delay={200}>
+            <SectionLabel>7-DAY OVERVIEW</SectionLabel>
+            <View style={[styles.weekCard, { backgroundColor: themeColors.white, borderColor: themeColors.border }]}>
+              <View style={styles.weekRow}>
+                <View style={styles.weekStat}>
+                  <Text style={[styles.weekValue, { color: colors.teal }]}>{todayDoseCount}/{dosesTotal}</Text>
+                  <Text style={[styles.weekLabel, { color: themeColors.inkDim }]}>Doses today</Text>
+                </View>
+                <View style={[styles.weekDivider, { backgroundColor: themeColors.border }]} />
+                <View style={styles.weekStat}>
+                  <Text style={[styles.weekValue, { color: colors.teal }]}>{avgGlucose}</Text>
+                  <Text style={[styles.weekLabel, { color: themeColors.inkDim }]}>Avg glucose</Text>
+                </View>
+                <View style={[styles.weekDivider, { backgroundColor: themeColors.border }]} />
+                <View style={styles.weekStat}>
+                  <Text style={[styles.weekValue, { color: colors.teal }]}>{weekTrend.filter(v => v >= 4.0 && v <= 7.0).length}/7</Text>
+                  <Text style={[styles.weekLabel, { color: themeColors.inkDim }]}>In range</Text>
+                </View>
+              </View>
+              <PrimaryButton
+                label="FULL REPORT"
+                variant="outline"
+                style={styles.weekBtn}
+                onPress={() => router.push('/report')}
+              />
+            </View>
+          </FadeIn>
+        )}
       </ScrollView>
 
       <StickyActionBar
@@ -210,4 +242,16 @@ const styles = StyleSheet.create({
   },
   heroCta: { alignSelf: 'flex-start', paddingHorizontal: 20, paddingVertical: 12 },
   carousel: { paddingRight: 20, marginBottom: 24 },
+  weekCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: 20,
+    marginBottom: 24,
+  },
+  weekRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  weekStat: { flex: 1, alignItems: 'center' },
+  weekValue: { fontFamily: fonts.display, fontSize: 26, marginBottom: 4 },
+  weekLabel: { fontFamily: fonts.body, fontSize: 12, textAlign: 'center' },
+  weekDivider: { width: 1, height: 48, marginHorizontal: 8 },
+  weekBtn: { alignSelf: 'stretch' },
 });

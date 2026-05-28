@@ -111,7 +111,7 @@ export default function MedicationDetailScreen() {
             {medications
               .filter((m) => m.id !== med.id)
               .map((m) => (
-                <MedicationCard key={m.id} medication={m} compact />
+                <MedicationCard key={m.id} medication={m} compact onLogPress={() => logDose(m.id)} />
               ))}
           </ScrollView>
         </View>
