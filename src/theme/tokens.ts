@@ -11,7 +11,7 @@ export const radius = {
 export const shadow = {
   card: Platform.select({
     ios: {
-      shadowColor: '#0D4F4A',
+      shadowColor: '#1B4332',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.08,
       shadowRadius: 12,

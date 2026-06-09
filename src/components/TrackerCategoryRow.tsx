@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppIcon } from './AppIcon';
 import type { TrackerCategory } from '@/data/content';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, shadow } from '@/theme/tokens';
@@ -28,7 +29,7 @@ export function TrackerCategoryRow({ category, onPress }: TrackerCategoryRowProp
       ]}
     >
       <View style={[styles.thumb, shadow.card, { backgroundColor: category.tint }]}>
-        <Text style={styles.icon}>{category.icon}</Text>
+        <AppIcon name={category.icon} size={32} color={colors.teal} />
       </View>
       <View style={styles.text}>
         <Text style={[styles.title, { color: colors.teal }]}>{category.title}</Text>

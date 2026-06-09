@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { db } from './schema';
+import { db, ensureDbReady, safeRead, safeRun } from './schema';
 import type { Medication, MedicationStatus } from '../data/content';
 import { formatLoggedAt } from './useGlucose';
 
@@ -32,6 +32,7 @@ export type DoseLog = {
   id: number;
   medicationName: string;
   loggedAt: string;
+  rawDate: string;
 };
 
 export function useMedications() {
@@ -39,22 +40,28 @@ export function useMedications() {
   const [doseHistory, setDoseHistory] = useState<DoseLog[]>([]);
 
   const loadHistory = useCallback(() => {
-    const rows = db.getAllSync<{ id: number; name: string; logged_at: string }>(
-      `SELECT dl.id, m.name, dl.logged_at
+    const rows = safeRead(
+      () =>
+        db.getAllSync<{ id: number; name: string; logged_at: string }>(
+          `SELECT dl.id, m.name, dl.logged_at
        FROM dose_logs dl
        JOIN medications m ON dl.medication_id = m.id
        ORDER BY dl.logged_at DESC LIMIT 30`,
+        ),
+      [] as { id: number; name: string; logged_at: string }[],
     );
     setDoseHistory(rows.map((r) => ({
       id: r.id,
       medicationName: r.name,
       loggedAt: formatLoggedAt(r.logged_at),
+      rawDate: r.logged_at.slice(0, 10),
     })));
   }, []);
 
   const load = useCallback(() => {
-    const rows = db.getAllSync<DbMedication>(
-      'SELECT * FROM medications WHERE active = 1 ORDER BY created_at ASC',
+    const rows = safeRead(
+      () => db.getAllSync<DbMedication>('SELECT * FROM medications WHERE active = 1 ORDER BY created_at ASC'),
+      [] as DbMedication[],
     );
     setMedications(rows.map(toMedication));
   }, []);
@@ -62,18 +69,19 @@ export function useMedications() {
   useEffect(() => {
     load();
     loadHistory();
+    // Web: the SQLite worker may not be ready on first mount — re-load once it is.
+    ensureDbReady().then(() => {
+      load();
+      loadHistory();
+    });
   }, [load, loadHistory]);
 
   const logDose = useCallback(
     (medicationId: string) => {
-      db.runSync(
-        `INSERT INTO dose_logs (medication_id) VALUES (?)`,
-        medicationId,
-      );
-      db.runSync(
-        `UPDATE medications SET status = 'taken' WHERE id = ?`,
-        medicationId,
-      );
+      safeRun(() => {
+        db.runSync(`INSERT INTO dose_logs (medication_id) VALUES (?)`, medicationId);
+        db.runSync(`UPDATE medications SET status = 'taken' WHERE id = ?`, medicationId);
+      });
       load();
       loadHistory();
     },
@@ -82,17 +90,19 @@ export function useMedications() {
 
   const addMedication = useCallback(
     (med: Omit<Medication, 'status'>) => {
-      db.runSync(
-        `INSERT INTO medications (id, name, schedule, status, gradient_from, gradient_to, icon, tag, interaction_note)
+      safeRun(() =>
+        db.runSync(
+          `INSERT INTO medications (id, name, schedule, status, gradient_from, gradient_to, icon, tag, interaction_note)
          VALUES (?, ?, ?, 'upcoming', ?, ?, ?, ?, ?)`,
-        med.id,
-        med.name,
-        med.schedule,
-        med.gradient[0],
-        med.gradient[1],
-        med.icon,
-        med.tag ?? null,
-        med.interactionNote ?? null,
+          med.id,
+          med.name,
+          med.schedule,
+          med.gradient[0],
+          med.gradient[1],
+          med.icon,
+          med.tag ?? null,
+          med.interactionNote ?? null,
+        ),
       );
       load();
     },

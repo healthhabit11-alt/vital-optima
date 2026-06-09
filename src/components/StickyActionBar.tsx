@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppIcon } from './AppIcon';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 
@@ -21,7 +22,7 @@ export function StickyActionBar({ label, onPress, icon }: StickyActionBarProps) 
       style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}
     >
       <Text style={styles.label}>{label}</Text>
-      {icon ? <Text style={styles.icon}>{icon}</Text> : null}
+      {icon ? <AppIcon name={icon} size={18} color={colors.white} /> : null}
     </Pressable>
   );
 }

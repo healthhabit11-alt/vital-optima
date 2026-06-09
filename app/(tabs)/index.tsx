@@ -148,7 +148,7 @@ export default function DashboardScreen() {
 
       <StickyActionBar
         label="LOG NEXT DOSE"
-        icon="💊"
+        icon="med"
         onPress={() => {
           const next = medications.find((m) => m.status !== 'taken');
           if (next) router.push(`/medication/${next.id}`);

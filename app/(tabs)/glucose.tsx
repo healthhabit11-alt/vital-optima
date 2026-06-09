@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { GlucoseSummaryCard } from '@/components/GlucoseSummaryCard';
 import { HypoModal } from '@/components/HypoModal';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -30,7 +31,7 @@ export default function GlucoseScreen() {
   const [draftValue, setDraftValue] = useState('');
 
   const { profile } = useUserProfile();
-  const { readings, latest, weekTrend, logReading, hypoAlert, dismissHypo } = useGlucose();
+  const { readings, latest, weekTrend, weekDayLabels, logReading, hypoAlert, dismissHypo, triggerHypoAlert } = useGlucose();
 
   const max = Math.max(...weekTrend, 1);
 
@@ -87,21 +88,28 @@ export default function GlucoseScreen() {
             <SectionLabel>7-DAY TREND</SectionLabel>
             <View style={[styles.chart, { backgroundColor: colors.cream, borderColor: colors.border }]} accessibilityLabel="Seven day glucose trend chart">
               {weekTrend.map((v, i) => {
-                const h = Math.max(12, (v / max) * 96);
-                const inRange = v >= 4.0 && v <= 7.0;
+                const isEmpty = v === 0;
+                const h = isEmpty ? 8 : Math.max(12, (v / max) * 96);
+                const inRange = !isEmpty && v >= 4.0 && v <= 7.0;
                 return (
                   <View key={i} style={styles.barWrap}>
                     <LinearGradient
-                      colors={inRange ? [colors.tealLight, colors.mint] : [colors.terracotta, colors.gold]}
-                      style={[styles.bar, { height: h }]}
+                      colors={
+                        isEmpty
+                          ? [colors.border, colors.border]
+                          : inRange
+                          ? [colors.tealLight, colors.mint]
+                          : [colors.terracotta, colors.gold]
+                      }
+                      style={[styles.bar, { height: h, opacity: isEmpty ? 0.35 : 1 }]}
                     />
-                    <Text style={[styles.barLabel, { color: colors.inkDim }]}>{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</Text>
+                    <Text style={[styles.barLabel, { color: colors.inkDim }]}>{weekDayLabels[i]}</Text>
                   </View>
                 );
               })}
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>
+            <View style={styles.chips}>
               {glucoseQuickActions.map((c) => (
                 <Pressable
                   key={c.id}
@@ -111,15 +119,17 @@ export default function GlucoseScreen() {
                   onPress={() => {
                     if (c.id === 'log') setTab('log');
                     else if (c.id === 'trend') setTab('trend');
-                    else if (c.id === 'hypo') setHypoAlert(3.5);
+                    else if (c.id === 'hypo') triggerHypoAlert(3.5);
                     else if (c.id === 'export') router.push('/report');
                   }}
                 >
-                  <Text style={styles.chipIcon}>{c.icon}</Text>
-                  <Text style={[styles.chipLabel, { color: colors.ink }]}>{c.label}</Text>
+                  <AppIcon name={c.icon} size={20} color={colors.teal} />
+                  <Text style={[styles.chipLabel, { color: colors.ink }]} numberOfLines={2}>
+                    {c.label}
+                  </Text>
                 </Pressable>
               ))}
-            </ScrollView>
+            </View>
           </>
         ) : (
           <>
@@ -212,8 +222,8 @@ const styles = StyleSheet.create({
   barWrap: { flex: 1, alignItems: 'center', height: '100%', justifyContent: 'flex-end' },
   bar: { width: '100%', maxWidth: 28, borderRadius: 4, minHeight: 8 },
   barLabel: { fontFamily: fonts.body, fontSize: 10, marginTop: 6 },
-  chips: { marginBottom: 20, marginHorizontal: -20, paddingHorizontal: 20 },
-  chip: { width: 88, alignItems: 'center', marginRight: 12 },
+  chips: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 20 },
+  chip: { flex: 1, alignItems: 'center' },
   chipIcon: { fontSize: 28, width: 72, height: 72, textAlign: 'center', lineHeight: 72, backgroundColor: '#E8F2F1', borderRadius: 12, marginBottom: 8 },
   chipLabel: { fontFamily: fonts.bodyBold, fontSize: 12, textAlign: 'center' },
   logHeading: { fontFamily: fonts.display, fontSize: 24, marginBottom: 8 },

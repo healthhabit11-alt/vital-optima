@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+
+import { AppIcon } from './AppIcon';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -30,7 +32,10 @@ export function MedicationCard({ medication, compact, onLogPress }: MedicationCa
 
   return (
     <Pressable
-      accessibilityRole="button"
+      // "link" (not "button") so react-native-web renders an <a>, not a <button>.
+      // The inner log control below is a <button>; <button> inside <button> is an
+      // invalid DOM nesting (web-only warning). <button> inside <a> is fine.
+      accessibilityRole="link"
       accessibilityLabel={`${medication.name}, ${status.label}, ${medication.schedule}`}
       onPress={() => router.push(`/medication/${medication.id}`)}
       style={({ pressed }) =>
@@ -46,7 +51,7 @@ export function MedicationCard({ medication, compact, onLogPress }: MedicationCa
           colors={medication.gradient}
           style={StyleSheet.flatten([styles.gradient, compact ? styles.gradientCompact : null])}
         >
-          <Text style={styles.icon}>{medication.icon}</Text>
+          <AppIcon name={medication.icon} size={52} color={colors.white} />
         </LinearGradient>
         <Pressable
           accessibilityRole="button"

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { db } from './schema';
+import * as Crypto from 'expo-crypto';
+import { db, ensureDbReady, safeRead, safeRun } from './schema';
 
 export type UserProfile = {
   displayName: string;
@@ -27,7 +28,10 @@ export function useUserProfile() {
   });
 
   const load = useCallback(() => {
-    const row = db.getFirstSync<DbProfile>('SELECT * FROM user_profile WHERE id = 1');
+    const row = safeRead(
+      () => db.getFirstSync<DbProfile>('SELECT * FROM user_profile WHERE id = 1'),
+      null,
+    );
     if (row) {
       setProfile({
         displayName: row.display_name,
@@ -41,19 +45,23 @@ export function useUserProfile() {
 
   useEffect(() => {
     load();
+    // Web: the SQLite worker may not be ready on first mount — re-load once it is.
+    ensureDbReady().then(load);
   }, [load]);
 
   const updateProfile = useCallback(
     (patch: Partial<Omit<UserProfile, 'onboarded' | 'pinHash'>>) => {
-      if (patch.displayName !== undefined) {
-        db.runSync(`UPDATE user_profile SET display_name = ? WHERE id = 1`, patch.displayName);
-      }
-      if (patch.region !== undefined) {
-        db.runSync(`UPDATE user_profile SET region = ? WHERE id = 1`, patch.region);
-      }
-      if (patch.unit !== undefined) {
-        db.runSync(`UPDATE user_profile SET unit = ? WHERE id = 1`, patch.unit);
-      }
+      safeRun(() => {
+        if (patch.displayName !== undefined) {
+          db.runSync(`UPDATE user_profile SET display_name = ? WHERE id = 1`, patch.displayName);
+        }
+        if (patch.region !== undefined) {
+          db.runSync(`UPDATE user_profile SET region = ? WHERE id = 1`, patch.region);
+        }
+        if (patch.unit !== undefined) {
+          db.runSync(`UPDATE user_profile SET unit = ? WHERE id = 1`, patch.unit);
+        }
+      });
       load();
     },
     [load],
@@ -61,10 +69,12 @@ export function useUserProfile() {
 
   const completeOnboarding = useCallback(
     (name: string, region: string) => {
-      db.runSync(
-        `UPDATE user_profile SET display_name = ?, region = ?, onboarded = 1 WHERE id = 1`,
-        name,
-        region,
+      safeRun(() =>
+        db.runSync(
+          `UPDATE user_profile SET display_name = ?, region = ?, onboarded = 1 WHERE id = 1`,
+          name,
+          region,
+        ),
       );
       load();
     },
@@ -72,23 +82,37 @@ export function useUserProfile() {
   );
 
   const setPinHash = useCallback(
-    (hash: string) => {
-      db.runSync(`UPDATE user_profile SET pin_hash = ? WHERE id = 1`, hash);
+    async (raw: string) => {
+      const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, raw);
+      safeRun(() => db.runSync(`UPDATE user_profile SET pin_hash = ? WHERE id = 1`, hash));
       load();
     },
     [load],
   );
 
+  const verifyPin = useCallback(
+    async (raw: string): Promise<boolean> => {
+      if (!profile.pinHash) return false;
+      const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, raw);
+      return hash === profile.pinHash;
+    },
+    [profile.pinHash],
+  );
+
   const deleteAllData = useCallback(() => {
-    db.execSync(`DELETE FROM dose_logs`);
-    db.execSync(`DELETE FROM glucose_readings`);
-    db.execSync(`DELETE FROM medications`);
-    db.runSync(
-      `UPDATE user_profile SET display_name = ?, region = ?, unit = ?, pin_hash = NULL, onboarded = 0 WHERE id = 1`,
-      'You', 'AU', 'mmol/L',
-    );
+    safeRun(() => {
+      db.execSync(`DELETE FROM food_items`);
+      db.execSync(`DELETE FROM meals`);
+      db.execSync(`DELETE FROM dose_logs`);
+      db.execSync(`DELETE FROM glucose_readings`);
+      db.execSync(`DELETE FROM medications`);
+      db.runSync(
+        `UPDATE user_profile SET display_name = ?, region = ?, unit = ?, pin_hash = NULL, onboarded = 0 WHERE id = 1`,
+        'You', 'AU', 'mmol/L',
+      );
+    });
     load();
   }, [load]);
 
-  return { profile, updateProfile, completeOnboarding, setPinHash, deleteAllData };
+  return { profile, updateProfile, completeOnboarding, setPinHash, verifyPin, deleteAllData };
 }

@@ -48,21 +48,26 @@ export default function OnboardingScreen() {
     setStep('pin');
   };
 
-  const finish = (withPin?: string) => {
+  const finish = async (withPin?: string) => {
+    try {
+      if (withPin) await setPinHash(withPin);
+    } catch {
+      setPinError('Failed to secure your PIN. Please try again.');
+      return;
+    }
     completeOnboarding(name.trim(), region);
-    if (withPin) setPinHash(withPin);
     const names = Object.fromEntries(medications.map((m) => [m.id, m.name]));
     scheduleDefaultReminders(medications.map((m) => m.id), names);
     router.replace('/(tabs)');
   };
 
-  const handlePin = () => {
+  const handlePin = async () => {
     if (pin.length < 4) { setPinError('PIN must be at least 4 digits'); return; }
     if (pin !== pinConfirm) { setPinError('PINs do not match'); return; }
-    finish(pin);
+    await finish(pin);
   };
 
-  const skipPin = () => finish();
+  const skipPin = async () => { await finish(); };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>

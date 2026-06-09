@@ -46,6 +46,7 @@ export default function SettingsScreen() {
       name: { fontFamily: fonts.display, fontSize: 28, color: c.ink, marginBottom: 4, textAlign: 'center' },
       sub: { fontFamily: fonts.body, fontSize: 14, color: c.inkMuted, marginBottom: 28, textAlign: 'center' },
       stats: {
+        alignSelf: 'stretch',
         flexDirection: 'row',
         backgroundColor: c.white,
         borderRadius: 16,
@@ -58,6 +59,7 @@ export default function SettingsScreen() {
       statValue: { fontFamily: fonts.display, fontSize: 22, color: c.teal, marginBottom: 4 },
       statLabel: { fontFamily: fonts.body, fontSize: 12, color: c.inkDim },
       menu: {
+        alignSelf: 'stretch',
         backgroundColor: c.white,
         borderRadius: 16,
         borderWidth: 1,

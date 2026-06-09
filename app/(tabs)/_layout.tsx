@@ -52,6 +52,24 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="nutrition"
+        options={{
+          title: 'Nutrition',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'restaurant' : 'restaurant-outline'} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="companion"
+        options={{
+          title: 'Vita',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'sparkles' : 'sparkles-outline'} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',

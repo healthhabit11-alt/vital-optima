@@ -5,15 +5,15 @@ import { colors as lightColors } from './colors';
 
 export const darkColors = {
   ...lightColors,
-  white: '#121816',
-  cream: '#0C100E',
-  creamDark: '#1A221E',
-  ink: '#F4F0E8',
-  inkMuted: '#B8B0A6',
-  inkDim: '#8A8278',
-  border: '#2A332F',
-  tealMuted: '#1A2E2B',
-  goldBg: '#2A2418',
+  white: '#101713', // elevated surface (dark pine)
+  cream: '#0A0F0C', // app background (dark pine)
+  creamDark: '#161D18',
+  ink: '#EAF1EA',
+  inkMuted: '#AEB8B0',
+  inkDim: '#7E8A82',
+  border: '#27302A',
+  tealMuted: '#16241C',
+  goldBg: '#1C231D',
 } as const;
 
 type ThemeMode = 'light' | 'dark' | 'system';

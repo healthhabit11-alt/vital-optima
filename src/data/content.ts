@@ -70,24 +70,24 @@ export const todaysMedications: Medication[] = [
     name: 'Bictegravir combo',
     schedule: 'Morning · with food',
     status: 'taken',
-    gradient: ['#1A6B64', '#3D9B8F'],
-    icon: '💊',
+    gradient: ['#1B4332', '#2D6A4F'],
+    icon: 'med',
   },
   {
     id: 'metformin',
     name: 'Metformin',
     schedule: 'With lunch',
     status: 'taken',
-    gradient: ['#0D4F4A', '#2E7D5A'],
-    icon: '💊',
+    gradient: ['#225C44', '#3E8E63'],
+    icon: 'med',
   },
   {
     id: 'evening-arv',
     name: 'Evening regimen',
     schedule: '9:00 PM',
     status: 'upcoming',
-    gradient: ['#C45C4A', '#E89A6F'],
-    icon: '💊',
+    gradient: ['#3E8E63', '#74C043'],
+    icon: 'med',
   },
 ];
 
@@ -96,29 +96,29 @@ export const medicationCategories: TrackerCategory[] = [
     id: 'daily',
     title: 'Daily medications',
     description: 'ARV and supporting meds with reminders',
-    icon: '💊',
-    tint: '#E8F2F1',
+    icon: 'med',
+    tint: '#E8F0EA',
   },
   {
     id: 'interactions',
     title: 'Food and drug notes',
     description: 'Timing and meal guidance for your regimen',
-    icon: '🍽️',
-    tint: '#FFF8E6',
+    icon: 'food',
+    tint: '#EEF1EC',
   },
   {
     id: 'history',
     title: 'Adherence history',
     description: 'Streaks, missed doses, and export-ready logs',
-    icon: '📊',
-    tint: '#FCEEEA',
+    icon: 'history',
+    tint: '#E6EAE4',
   },
   {
     id: 'reminders',
     title: 'Reminders',
     description: 'Generic VitalOptima alerts only on lock screen',
-    icon: '🔔',
-    tint: '#E8F2F1',
+    icon: 'reminders',
+    tint: '#E8F0EA',
   },
 ];
 
@@ -129,10 +129,10 @@ export type GlucoseQuickAction = {
 };
 
 export const glucoseQuickActions: GlucoseQuickAction[] = [
-  { id: 'log', label: 'Log reading', icon: '✏️' },
-  { id: 'trend', label: '7-day trend', icon: '📈' },
-  { id: 'hypo', label: 'Low reading help', icon: '⚠️' },
-  { id: 'export', label: 'Export data', icon: '📤' },
+  { id: 'log', label: 'Log reading', icon: 'log' },
+  { id: 'trend', label: '7-day trend', icon: 'trend' },
+  { id: 'hypo', label: 'Low reading help', icon: 'warning' },
+  { id: 'export', label: 'Export data', icon: 'export' },
 ];
 
 export type MedicationDetail = Medication & { components: MedicationComponent[] };
@@ -142,8 +142,8 @@ export const medicationDetail: MedicationDetail = {
   name: 'Evening regimen',
   schedule: '9:00 PM · with light snack',
   status: 'upcoming',
-  gradient: ['#C45C4A', '#E89A6F'],
-  icon: '💊',
+  gradient: ['#3E8E63', '#74C043'],
+  icon: 'med',
   components: [
     {
       id: 'dose',
@@ -151,21 +151,21 @@ export const medicationDetail: MedicationDetail = {
       meta: 'As prescribed · log when taken',
       flagged: true,
       action: 'customize',
-      icon: '💊',
+      icon: 'med',
     },
     {
       id: 'food',
       title: 'Take with food',
       meta: 'Logged lunch 12:40 PM',
       action: 'swap',
-      icon: '🥗',
+      icon: 'meal',
     },
     {
       id: 'interaction',
       title: 'Interaction check',
       meta: 'No new conflicts with today\'s log',
       action: 'customize',
-      icon: '✓',
+      icon: 'check',
     },
   ],
 };
@@ -191,14 +191,14 @@ const defaultComponents = (name: string): MedicationComponent[] => [
     meta: 'As prescribed · log when taken',
     flagged: true,
     action: 'customize',
-    icon: '💊',
+    icon: 'med',
   },
   {
     id: 'food',
     title: 'Take with food',
     meta: 'Check timing with your care plan',
     action: 'swap',
-    icon: '🥗',
+    icon: 'meal',
   },
 ];
 

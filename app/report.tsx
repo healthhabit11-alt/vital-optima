@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { FadeIn } from '@/components/FadeIn';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { reportTimeSlots, wellnessResources } from '@/data/content';
@@ -49,14 +50,14 @@ export default function ReportScreen() {
 
           <View style={styles.gallery}>
             <LinearGradient colors={[colors.tealMuted, colors.cream]} style={styles.galleryMain}>
-              <Text style={styles.galleryEmoji}>📊</Text>
+              <AppIcon name="history" size={52} color={colors.teal} />
             </LinearGradient>
             <View style={styles.gallerySide}>
               <View style={[styles.galleryTile, { backgroundColor: colors.cream }]}>
-                <Text style={styles.galleryEmoji}>💊</Text>
+                <AppIcon name="med" size={32} color={colors.teal} />
               </View>
               <View style={[styles.galleryTile, { backgroundColor: colors.goldBg }]}>
-                <Text style={styles.galleryEmoji}>🩸</Text>
+                <AppIcon name="glucose" size={32} color={colors.teal} />
               </View>
             </View>
           </View>

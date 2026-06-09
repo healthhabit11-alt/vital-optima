@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { MedicationCard } from '@/components/MedicationCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StickyActionBar } from '@/components/StickyActionBar';
@@ -17,9 +18,9 @@ import { fonts } from '@/theme/typography';
 
 function defaultComponents(name: string): MedicationComponent[] {
   return [
-    { id: 'dose', title: `${name} dose`, meta: 'As prescribed · log when taken', flagged: true, action: 'customize', icon: '💊' },
-    { id: 'food', title: 'Take with food', meta: 'Check timing with your care plan', action: 'swap', icon: '🥗' },
-    { id: 'interaction', title: 'Interaction check', meta: 'No conflicts logged today', action: 'customize', icon: '✓' },
+    { id: 'dose', title: `${name} dose`, meta: 'As prescribed · log when taken', flagged: true, action: 'customize', icon: 'med' },
+    { id: 'food', title: 'Take with food', meta: 'Check timing with your care plan', action: 'swap', icon: 'meal' },
+    { id: 'interaction', title: 'Interaction check', meta: 'No conflicts logged today', action: 'customize', icon: 'check' },
   ];
 }
 
@@ -51,7 +52,7 @@ export default function MedicationDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.heroWrap}>
           <LinearGradient colors={med.gradient} style={styles.hero}>
-            <Text style={styles.heroIcon}>{med.icon}</Text>
+            <AppIcon name={med.icon} size={64} color={colors.white} />
           </LinearGradient>
 
           <Pressable
@@ -87,7 +88,7 @@ export default function MedicationDetailScreen() {
           {components.map((c) => (
             <View key={c.id} style={[styles.row, { borderTopColor: themeColors.border }]}>
               <View style={[styles.thumb, { backgroundColor: themeColors.cream }]}>
-                <Text style={styles.thumbIcon}>{c.icon}</Text>
+                <AppIcon name={c.icon} size={26} color={themeColors.teal} />
               </View>
               <View style={styles.rowText}>
                 <Text style={[styles.rowTitle, { color: themeColors.ink }]}>{c.title}</Text>

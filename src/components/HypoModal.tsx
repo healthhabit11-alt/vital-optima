@@ -1,11 +1,12 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppIcon } from './AppIcon';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 
 const STEPS = [
-  { icon: '🍬', text: '15g fast-acting carbs (e.g. 4 glucose tablets, 150 mL juice)' },
-  { icon: '⏱️', text: 'Wait 15 minutes, then re-check your glucose' },
-  { icon: '🔁', text: 'If still below 4.0, repeat. If unwell, call emergency services' },
+  { icon: 'candy', text: '15g fast-acting carbs (e.g. 4 glucose tablets, 150 mL juice)' },
+  { icon: 'timer', text: 'Wait 15 minutes, then re-check your glucose' },
+  { icon: 'repeat', text: 'If still below 4.0, repeat. If unwell, call emergency services' },
 ];
 
 type Props = {
@@ -25,7 +26,9 @@ export function HypoModal({ value, onDismiss }: Props) {
       <View style={styles.overlay}>
         <View style={styles.sheet} accessibilityLiveRegion="assertive">
           <View style={styles.header}>
-            <Text style={styles.icon}>⚠️</Text>
+            <View style={styles.icon}>
+              <AppIcon name="warning" size={40} color={colors.badge} />
+            </View>
             <Text style={styles.title}>Low glucose reading</Text>
             <Text style={styles.reading}>{value?.toFixed(1)} mmol/L</Text>
           </View>
@@ -33,7 +36,9 @@ export function HypoModal({ value, onDismiss }: Props) {
           <Text style={styles.subtitle}>15-15 Rule</Text>
           {STEPS.map((step, i) => (
             <View key={i} style={styles.step}>
-              <Text style={styles.stepIcon}>{step.icon}</Text>
+              <View style={styles.stepIcon}>
+                <AppIcon name={step.icon} size={20} color={colors.teal} />
+              </View>
               <Text style={styles.stepText}>{step.text}</Text>
             </View>
           ))}
@@ -76,8 +81,8 @@ const styles = StyleSheet.create({
   },
   header: { alignItems: 'center', marginBottom: 24 },
   icon: { fontSize: 40, marginBottom: 10 },
-  title: { fontFamily: fonts.display, fontSize: 22, color: colors.terracotta, marginBottom: 4 },
-  reading: { fontFamily: fonts.bodyBold, fontSize: 28, color: colors.terracotta },
+  title: { fontFamily: fonts.display, fontSize: 22, color: colors.badge, marginBottom: 4 },
+  reading: { fontFamily: fonts.bodyBold, fontSize: 28, color: colors.badge },
   subtitle: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 1, color: colors.inkMuted, marginBottom: 14 },
   step: { flexDirection: 'row', gap: 12, marginBottom: 14, alignItems: 'flex-start' },
   stepIcon: { fontSize: 20, width: 28 },
@@ -89,7 +94,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
   },
-  emergencyLabel: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.terracotta, marginBottom: 4 },
+  emergencyLabel: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.badge, marginBottom: 4 },
   emergencyNumbers: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
   disclaimer: {
     fontFamily: fonts.body,

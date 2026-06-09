@@ -1,23 +1,23 @@
-/** Vital Optima — editorial wellness (teal + terracotta, not fast-food purple) */
+/** Vital Optima — pine green + lime accent, silver/cream neutrals (clinical, calm) */
 export const colors = {
   white: '#FFFFFF',
-  cream: '#FAF8F5',
-  creamDark: '#F0EBE3',
-  ink: '#1A1A18',
-  inkMuted: '#6B6560',
-  inkDim: '#9C958D',
-  border: '#E8E2D9',
+  cream: '#F3F5F1', // silver-cream app background
+  creamDark: '#E6EAE4', // deeper silver-cream surface
+  ink: '#16211B', // near-black, pine-tinted
+  inkMuted: '#586860',
+  inkDim: '#8C9A91',
+  border: '#D7DED8', // silver-sage hairlines
 
-  teal: '#0D4F4A',
-  tealLight: '#1A6B64',
-  tealMuted: '#E8F2F1',
-  mint: '#3D9B8F',
+  teal: '#1B4332', // PINE GREEN — primary brand
+  tealLight: '#2D6A4F', // mid pine
+  tealMuted: '#E8F0EA', // pale green surface
+  mint: '#74C043', // LIME GREEN — bright accent
 
-  terracotta: '#C45C4A',
-  terracottaDark: '#A84838',
-  gold: '#C9A227',
-  goldBg: '#FFF8E6',
+  terracotta: '#5E8C6A', // secondary sage green
+  terracottaDark: '#436E51',
+  gold: '#9AA39B', // silver accent
+  goldBg: '#EEF1EC',
 
-  success: '#2E7D5A',
-  badge: '#E86A4A',
+  success: '#2D6A4F', // pine
+  badge: '#C75146', // alert red — kept distinct for safety (e.g. hypo warnings)
 } as const;

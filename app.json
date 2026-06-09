@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "vitaloptima",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.vitaloptima.app"
@@ -13,23 +14,33 @@
     "android": {
       "package": "com.vitaloptima.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0D4F4A"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1B4332"
       }
     },
     "web": {
       "bundler": "metro",
-      "output": "single"
+      "output": "server",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
       "expo-font",
       "expo-sqlite",
-      ["expo-splash-screen", { "backgroundColor": "#0D4F4A", "resizeMode": "contain" }],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "backgroundColor": "#1B4332",
+          "resizeMode": "contain"
+        }
+      ],
       "expo-status-bar",
       [
         "expo-notifications",
         {
-          "color": "#0D4F4A",
+          "color": "#1B4332",
           "defaultChannel": "default",
           "androidMode": "default"
         }
@@ -41,8 +52,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "132376af-e0b0-4cbc-b7be-118257da3bd9"
+        "projectId": "330bd385-4e7d-4b80-b324-4a9bba149f17"
       }
-    }
+    },
+    "owner": "healthhabitat"
   }
 }
